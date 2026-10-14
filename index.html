@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#e9e8e2" />
+    <meta name="description" content="BROWSERCEPTION. A study in digital space. An interactive artwork in five continuous acts." />
+    <title>BROWSERCEPTION — A study in digital space</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <canvas id="world" aria-label="An architectural world made from this website"></canvas>
+    <main id="ordinary" aria-label="BROWSERCEPTION, an independent experiment in perception">
+      <div class="paper-grid" aria-hidden="true"></div>
+      <header class="masthead">
+        <a class="wordmark" href="/" aria-label="BROWSERCEPTION home">BROWSERCEPTION<span class="wordmark-dot">®</span></a>
+        <p>An independent experiment<br class="mobile-break" /> in perception.</p>
+        <span class="red-square" aria-hidden="true"></span>
+      </header>
+      <section class="hero" aria-label="A study in digital space">
+        <h1><span>BROWSER</span><span>CEPTION</span><span class="sr-only"> — A study in digital space.</span></h1>
+        <div class="hero-aside">
+          <svg class="long-arrow" viewBox="0 0 400 110" fill="none" aria-hidden="true"><path d="M0 55H394M342 3L394 55L342 107" /></svg>
+          <div class="aside-caption"><span class="edition">EXPERIMENT — 001</span><p>A study in<br />digital space.</p></div>
+        </div>
+      </section>
+      <section class="entry-row">
+        <p class="manifesto">THE BROWSER IS<br />NOT A WINDOW.</p>
+        <button id="enter" class="enter-button" type="button" disabled><span>ENTER</span><svg viewBox="0 0 32 20" aria-hidden="true"><path d="M0 10H30M21 1L30 10L21 19" /></svg></button>
+        <p class="manifesto last">IT IS A WORLD.</p>
+      </section>
+      <footer class="colophon"><span>AN EXPLORATION OF THE IN-BETWEEN</span><span id="edition">VOL. 01 / NO OUTSIDE</span></footer>
+    </main>
+    <aside id="controls" class="controls" aria-label="Experience settings">
+      <button id="sound" type="button" aria-pressed="false" title="Toggle sound (M)"><span class="sound-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="sound-label">SOUND OFF</span></button>
+      <button id="motion" type="button" aria-pressed="false" title="Use a gentler journey"><span class="motion-icon" aria-hidden="true"></span><span id="motion-label">REDUCE MOTION</span></button>
+    </aside>
+    <div id="journey-ui" hidden>
+      <div class="journey-top"><span>BROWSERCEPTION</span><button id="exit" type="button">BACK TO SURFACE <span aria-hidden="true">↗</span></button></div>
+      <div class="journey-caption"><span id="act-label">02 / THE FRACTURE</span><h2 id="act-title">The surface gives way.</h2></div>
+      <button id="continue" type="button">CONTINUE <span aria-hidden="true">↓</span></button>
+      <button id="return" class="return-button" type="button" hidden>ENTER THE FAMILIAR <span aria-hidden="true">↗</span></button>
+      <div class="journey-bottom"><span id="travel-hint">MOVE TO LOOK · SCROLL TO TRAVEL</span><span id="depth-label">DEPTH 000</span></div>
+      <div class="progress-track" aria-hidden="true"><span id="progress-fill"></span></div>
+    </div>
+    <p id="status" class="sr-only" role="status" aria-live="polite"></p>
+    <div id="fallback" role="alert" hidden><p id="fallback-message">This browser cannot open the spatial experience.</p><button id="retry" type="button">TRY AGAIN</button></div>
+    <noscript><p class="no-script">Enable JavaScript to enter BROWSERCEPTION.</p></noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
