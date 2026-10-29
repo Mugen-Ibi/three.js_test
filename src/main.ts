@@ -122,6 +122,15 @@ function showError(message: string) {
   enter.disabled = true;
 }
 
+function invalidatePreparation() {
+  unavailable = true;
+  ready = false;
+  busy = false;
+  preparationId++;
+  clearTimeout(resizeTimer);
+  resizeTimer = 0;
+}
+
 async function refreshSurface() {
   if (!surface || unavailable) return;
   const request = ++preparationId;
@@ -335,11 +344,14 @@ window.addEventListener('keydown', (event) => {
   if (event.key === 'Enter') { if (journey.stage === 'ordinary') void begin(); else journey.return(); }
 });
 window.addEventListener('resize', () => {
+  if (unavailable) return;
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer?.setSize(innerWidth, innerHeight);
   clearTimeout(resizeTimer);
   resizeTimer = window.setTimeout(() => {
+    resizeTimer = 0;
+    if (unavailable) return;
     if (busy) { window.dispatchEvent(new Event('resize')); return; }
     void refreshSurface();
   }, 160);
@@ -350,16 +362,14 @@ document.addEventListener('visibilitychange', () => {
 });
 canvas.addEventListener('webglcontextlost', (event) => {
   event.preventDefault();
-  unavailable = true;
-  ready = false;
-  preparationId++;
+  invalidatePreparation();
   cancelAnimationFrame(frame);
   sound.suspend();
   journey.reset();
   home.style.opacity = '1'; home.style.pointerEvents = 'auto'; home.inert = false; journeyUI.hidden = true;
   showError('The graphics connection was interrupted. Reload to return to the surface.');
 });
-function dispose() { unavailable = true; preparationId++; cancelAnimationFrame(frame); clearTimeout(resizeTimer); sound.dispose(); world?.dispose(); surface?.dispose(); renderer?.dispose(); }
+function dispose() { invalidatePreparation(); cancelAnimationFrame(frame); sound.dispose(); world?.dispose(); surface?.dispose(); renderer?.dispose(); }
 window.addEventListener('pagehide', (event) => { if (!event.persisted) dispose(); });
 if (import.meta.hot) import.meta.hot.dispose(dispose);
 
