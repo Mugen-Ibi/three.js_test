@@ -2,11 +2,11 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          three: ['three'],
-          typeface: ['three/examples/fonts/helvetiker_bold.typeface.json'],
+        manualChunks(id) {
+          if (id.includes('/node_modules/three/')) return 'three';
+          if (id.endsWith('/assets/helvetiker_bold.typeface.json')) return 'typeface';
         },
       },
     },

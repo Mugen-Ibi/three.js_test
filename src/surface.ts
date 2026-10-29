@@ -50,6 +50,7 @@ export class Surface {
     settings.removeAttribute('id');
     settings.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
     settings.setAttribute('aria-hidden', 'true');
+    settings.inert = true;
     settings.classList.add('capture-settings');
     this.home.append(settings);
     let canvas: HTMLCanvasElement;

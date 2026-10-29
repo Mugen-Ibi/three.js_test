@@ -1,7 +1,7 @@
 import './style.css';
 import * as THREE from 'three';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-import fontData from 'three/examples/fonts/helvetiker_bold.typeface.json';
+import fontData from './assets/helvetiker_bold.typeface.json';
 import { World } from './world';
 import { Surface } from './surface';
 import { Soundscape } from './audio';
@@ -26,6 +26,8 @@ let motionAmount = reduced ? 0 : 1;
 let ready = false;
 let busy = false;
 let entryPending = false;
+let preparationId = 0;
+let unavailable = false;
 let world: World | undefined;
 let renderer: THREE.WebGLRenderer | undefined;
 let surface: Surface | undefined;
@@ -100,7 +102,7 @@ function onStageChange(stage: Stage) {
     camera.position.set(0, 0, 12);
     camera.quaternion.identity();
     // The page stays pixel-identical at the landing. The second-loop change lives in the world.
-    enter.disabled = false;
+    enter.disabled = unavailable;
     ready = false;
     // Rebuild only when needed; dispose previous texture after the replacement exists.
     void refreshSurface().then(() => enter.focus({ preventScroll: true }));
@@ -114,35 +116,42 @@ function onStageChange(stage: Stage) {
 }
 
 function showError(message: string) {
+  ready = false;
   $('fallback-message').textContent = message;
   $('fallback').hidden = false;
   enter.disabled = true;
 }
 
 async function refreshSurface() {
-  if (!surface) return;
+  if (!surface || unavailable) return;
+  const request = ++preparationId;
+  ready = false;
   busy = true;
+  enter.disabled = true;
   try {
     const texture = await surface.capture(camera);
+    if (request !== preparationId || unavailable) return;
     if (world) world.setHomepage(texture, camera.aspect);
     else world = new World(scene, new FontLoader().parse(fontData), texture, camera.aspect);
     ready = true;
     $('fallback').hidden = true;
     enter.disabled = false;
   } catch (error) {
+    if (request !== preparationId || unavailable) return;
     console.error('Surface preparation failed', error);
     showError('The page could not be prepared. Please retry to enter.');
-  } finally { busy = false; }
+  } finally { if (request === preparationId) busy = false; }
 }
 
 async function begin(event?: MouseEvent) {
-  if (journey.stage !== 'ordinary' || busy || entryPending) return;
+  if (journey.stage !== 'ordinary' || busy || entryPending || unavailable) return;
   entryPending = true;
   try {
     await sound.unlock();
+    if (unavailable) return;
     home.classList.add('preparing');
     await refreshSurface();
-    if (!ready || !surface) return;
+    if (!ready || !surface || unavailable || journey.stage !== 'ordinary') return;
     surface.setOrigin((event?.clientX || innerWidth / 2) / innerWidth, (event?.clientY || innerHeight * .75) / innerHeight);
     journey.enter();
     sound.cue('enter');
@@ -266,9 +275,10 @@ async function initialize() {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1;
     renderer.shadowMap.enabled = innerWidth > 700;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     surface = new Surface(scene, home);
     await refreshSurface();
+    if (unavailable) return;
     renderer.compile(scene, camera);
     renderer.render(scene, camera);
     frame = requestAnimationFrame(animate);
@@ -286,7 +296,7 @@ mediaMotion.addEventListener('change', (event) => { if (!motionOverride) { reduc
 continueButton.addEventListener('click', () => journey.travel(.19));
 returnButton.addEventListener('click', () => journey.return());
 $('exit').addEventListener('click', () => journey.reset());
-$('retry').addEventListener('click', () => { if (!renderer) location.reload(); else void refreshSurface(); });
+$('retry').addEventListener('click', () => { if (!renderer || unavailable) location.reload(); else if (!busy) void refreshSurface(); });
 
 window.addEventListener('pointermove', (event) => {
   pointer.set(event.clientX / innerWidth * 2 - 1, 1 - event.clientY / innerHeight * 2);
@@ -340,13 +350,16 @@ document.addEventListener('visibilitychange', () => {
 });
 canvas.addEventListener('webglcontextlost', (event) => {
   event.preventDefault();
+  unavailable = true;
+  ready = false;
+  preparationId++;
   cancelAnimationFrame(frame);
   sound.suspend();
+  journey.reset();
   home.style.opacity = '1'; home.style.pointerEvents = 'auto'; home.inert = false; journeyUI.hidden = true;
   showError('The graphics connection was interrupted. Reload to return to the surface.');
-  $('retry').onclick = () => location.reload();
 });
-function dispose() { cancelAnimationFrame(frame); clearTimeout(resizeTimer); sound.dispose(); world?.dispose(); surface?.dispose(); renderer?.dispose(); }
+function dispose() { unavailable = true; preparationId++; cancelAnimationFrame(frame); clearTimeout(resizeTimer); sound.dispose(); world?.dispose(); surface?.dispose(); renderer?.dispose(); }
 window.addEventListener('pagehide', (event) => { if (!event.persisted) dispose(); });
 if (import.meta.hot) import.meta.hot.dispose(dispose);
 
