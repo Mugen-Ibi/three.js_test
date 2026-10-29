@@ -238,7 +238,10 @@ function animate(now: number) {
   const dt = Math.min(rawDt, .05);
   worldTime += dt;
   if (journey.stage === 'ordinary') return;
-  journey.tick(dt, reduced);
+  // Scene durations follow visible elapsed time, not a minimum render FPS.
+  // Bound exceptional foreground stalls; visibilitychange excludes hidden time.
+  // Keep the smaller cap above for ambient motion and pointer smoothing.
+  journey.tick(Math.min(rawDt, 1), reduced);
   motionAmount += ((reduced ? 0 : 1) - motionAmount) * (1 - Math.exp(-dt * 2));
   smoothPointer.lerp(pointer, 1 - Math.exp(-dt * 4));
   updateCamera();
